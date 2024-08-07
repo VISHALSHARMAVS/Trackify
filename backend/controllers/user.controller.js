@@ -1,6 +1,12 @@
-
+import bcrypt from 'bcryptjs'
 import User from '../models/user.model.js';
+import jwt from 'jsonwebtoken';
 
+const generateToken = (id)=>{
+return jwt.sign({id},process.env.JWT_SECRET,{expiresIn:'1d'})
+}
+
+// regiser user 
 const registerUser = async(req,res)=>{
   const {name,email,password} = req.body
     
@@ -25,14 +31,25 @@ const registerUser = async(req,res)=>{
       }
 
 
-
+      
       const user = await User.create({
         name,email,password
       })
+
+      // generate access token 
+      const token = generateToken(user._id)
+      //send HTTP-Only Cookie
+      res.cookie('token',token,{
+        path:'/',
+        httpOnly:true,
+        expires: new Date(Date.now()+1000*86400), // 1 day
+        sameSite:"none",
+        secure:true
+      })
       if (user) {
-          const {_id,name,email,photo,bio,phone}= req.body;
+          const {_id,name,email,photo,bio,phone}= user;
         res.status(201).json({
-            _id,name,email,photo,bio,phone
+            _id,name,token,email,photo,bio,phone
         })
     }
     else {
@@ -46,4 +63,45 @@ const registerUser = async(req,res)=>{
     }
 }
 
-export  {registerUser}
+//login user 
+const loginUser = async (req,res)=>{
+const {email,password} = req.body;
+
+if (!email || !password) {
+  res.status(400);
+  throw new Error("Please add email or password")
+}
+const user = await User.findOne({email})
+if (!user) {
+  res.status(400);
+  throw new Error("User not found ")
+}
+
+
+const isPasswordValid = await user.isPasswordCorrect(password);
+if (!isPasswordValid) {
+  res.status(404)
+  throw new Error("Invalid User Credentials");
+}
+ // generate access token 
+ const token = generateToken(user._id)
+ //send HTTP-Only Cookie
+ res.cookie('token',token,{
+   path:'/',
+   httpOnly:true,
+   expires: new Date(Date.now()+1000*86400), // 1 day
+   sameSite:"none",
+   secure:true
+ })
+const {_id,name,photo,phone, bio}= user
+if (user) {
+  res.status(200).json({
+    _id,name,photo,phone,email,bio,token
+  })
+}else {
+  res.status(400)
+  throw new Error("Invalid email or password")
+}
+}
+
+export  {registerUser,loginUser}
