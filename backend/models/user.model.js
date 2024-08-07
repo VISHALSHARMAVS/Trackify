@@ -1,4 +1,6 @@
-const mongoose = require('mongoose')
+
+import mongoose from 'mongoose'
+import bcrypt from 'bcryptjs'
 
 const userSchema = mongoose.Schema({
      name :{
@@ -23,7 +25,7 @@ const userSchema = mongoose.Schema({
      photo:{
         type:String,
         required:[true,'Please add a Photo'],
-        default:""
+        default:"https://www.shutterstock.com/shutterstock/photos/2294125351/display_1500/stock-photo-digital-nomad-in-bali-a-man-on-a-business-trip-or-vacation-takes-a-coffee-break-in-a-busy-cafe-2294125351.jpg"
      },
      phone:{
         type:String,
@@ -38,5 +40,15 @@ const userSchema = mongoose.Schema({
 
 },{timestamps:true})
 
+userSchema.pre("save",async function (next) {
+   if (this.isModified('password')) {
+      return next();
+   }
+   
+   const salt = await bcrypt.genSalt(10);
+   const hashedPassword =  bcrypt.hash(this.password, salt);
+   this.password = hashedPassword;
+})
+
 const User = mongoose.model('User',userSchema);
-module.exports = User
+export default User

@@ -7,4 +7,4 @@ res.json({
 })
 
 }
-module.exports = errorHandling
+export default errorHandling
