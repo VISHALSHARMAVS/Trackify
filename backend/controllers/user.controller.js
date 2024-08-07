@@ -104,4 +104,33 @@ if (user) {
 }
 }
 
-export  {registerUser,loginUser}
+// logout user 
+const logoutUser = async (req,res)=>{
+  res.cookie('token',"",{
+    path:'/',
+    httpOnly:true,
+    expires: new Date(0),
+    sameSite:"none",
+    secure:true
+  })
+  return res.status(200).json({
+    message:"Logout Successfully "
+  })
+}
+
+//Get user Data
+const getUser = async(req,res)=>{
+  const user = await User.findById(req.user._id)
+  if (user) {
+    const {_id,email,name,phone,photo,bio} = user;
+    res.status(200).json({
+      _id,email,name,phone,photo,bio
+    })
+  }
+  else{
+    res.status(400);
+    throw new Error("User not found ")
+  }
+}
+
+export  {registerUser,loginUser,logoutUser,getUser}
