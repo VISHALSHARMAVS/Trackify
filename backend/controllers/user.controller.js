@@ -174,4 +174,32 @@ else {
 }
 }
 
-export  {registerUser,loginUser,logoutUser,getUser,loginStatus,updateUser}
+const changePassword = async(req,res)=>{
+const user = await User.findById(req.user._id);
+if (!user) {
+  res.status(400);
+  throw new Error("User not found")
+ }
+const {oldPassword,password } = req.body ;
+
+ if (!oldPassword || !password) {
+  res.status(400);
+  throw new Error("Please add password ")
+ }
+
+ const passwordIsCorrect = await bcrypt.compare(oldPassword,user.password);
+ 
+ if (user && passwordIsCorrect) {
+  user.password = password;
+  await user.save();
+  res.status(200).send("password changed ");
+
+ }
+ else{
+  res.status(400);
+  throw new Error("Old Password is incorrect");
+  
+ }
+}
+
+export  {registerUser,loginUser,logoutUser,getUser,loginStatus,updateUser,changePassword}
