@@ -132,5 +132,46 @@ const getUser = async(req,res)=>{
     throw new Error("User not found ")
   }
 }
+const loginStatus = async (req,res)=>{
+  const token = req.cookies.token;
+  if (!token) {
+    return res.json(false);
 
-export  {registerUser,loginUser,logoutUser,getUser}
+    const verified = jwt.verify(token,process.env.JWT_SECRET);
+    if (verified) {
+      return res.json(true)
+    }
+    return res.json(false)
+  }
+}
+
+const updateUser = async (req,res)=>{
+const user = await User.findById(req.user._id);
+if (user) {
+  const {phone,photo,
+    email,bio,name
+  } = user;
+
+  user.email = email;
+  user.name = req.body.name || name
+  user.phone = req.body.phone || phone
+  user.bio = req.body.bio || bio
+  user.photo = req.body.photo || photo
+
+  const updatedUser = await user.save();
+  res.status(200).json({
+    _id : updateUser._id,
+    name : updateUser.name,
+    email : updateUser.email,
+    photo : updateUser.photo,
+    phone : updateUser.phone,
+    bio : updateUser.bio
+  })
+}
+else {
+  res.status(404);
+  throw new Error("User Not Found ")
+}
+}
+
+export  {registerUser,loginUser,logoutUser,getUser,loginStatus,updateUser}
