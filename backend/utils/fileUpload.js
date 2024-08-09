@@ -41,4 +41,4 @@ const fileSizeFormatter = (bytes, decimal) => {
   );
 };
 
-module.exports = { upload, fileSizeFormatter };
+export default { upload, fileSizeFormatter };
